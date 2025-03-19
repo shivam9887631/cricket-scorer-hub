@@ -1,7 +1,7 @@
 
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, Calendar, BarChart2, Settings } from "lucide-react";
+import { Home, Calendar, BarChart2, Settings, Globe, Bell, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Navigation: React.FC = () => {
@@ -9,17 +9,24 @@ const Navigation: React.FC = () => {
   
   const navItems = [
     { path: "/", label: "Home", icon: Home },
-    { path: "/matches", label: "Matches", icon: Calendar },
-    { path: "/live", label: "Live", icon: BarChart2 },
+    { path: "/local-matches", label: "Local", icon: Calendar },
+    { path: "/international-matches", label: "Global", icon: Globe },
+    { path: "/notifications", label: "Alerts", icon: Bell },
     { path: "/settings", label: "Settings", icon: Settings },
   ];
+
+  // Add admin link only if needed
+  if (location.pathname.includes("/admin")) {
+    navItems.push({ path: "/admin", label: "Admin", icon: Shield });
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass-effect border-t border-border/50 px-6 py-4">
       <div className="max-w-md mx-auto">
         <ul className="flex items-center justify-between">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path || 
+                           (item.path !== "/" && location.pathname.startsWith(item.path));
             const Icon = item.icon;
             
             return (
