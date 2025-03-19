@@ -36,27 +36,69 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Home route component that redirects to login if not authenticated
+const HomeRoute = () => {
+  const { currentUser } = useAuth();
+  
+  if (!currentUser) {
+    return <Navigate to="/login" />;
+  }
+  
+  return <Index />;
+};
+
 // Define the AppRoutes component to use the auth context
 const AppRoutes = () => {
   const { currentUser } = useAuth();
 
   return (
     <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/local-matches" element={<LocalMatches />} />
-      <Route path="/international-matches" element={<InternationalMatches />} />
-      <Route path="/match/:id" element={<MatchDetails />} />
-      <Route path="/player/:id" element={<PlayerStats />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/notifications" element={<Notifications />} />
+      {/* Redirect from root to home if logged in, otherwise to login */}
+      <Route path="/" element={<HomeRoute />} />
+      
+      {/* Auth routes */}
       <Route path="/login" element={
         currentUser ? <Navigate to="/" /> : <Login />
+      } />
+      
+      {/* Protected routes that require authentication */}
+      <Route path="/local-matches" element={
+        <ProtectedRoute>
+          <LocalMatches />
+        </ProtectedRoute>
+      } />
+      <Route path="/international-matches" element={
+        <ProtectedRoute>
+          <InternationalMatches />
+        </ProtectedRoute>
+      } />
+      <Route path="/match/:id" element={
+        <ProtectedRoute>
+          <MatchDetails />
+        </ProtectedRoute>
+      } />
+      <Route path="/player/:id" element={
+        <ProtectedRoute>
+          <PlayerStats />
+        </ProtectedRoute>
+      } />
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      } />
+      <Route path="/notifications" element={
+        <ProtectedRoute>
+          <Notifications />
+        </ProtectedRoute>
       } />
       <Route path="/admin" element={
         <ProtectedRoute>
           <AdminPanel />
         </ProtectedRoute>
       } />
+      
+      {/* Fallback route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
