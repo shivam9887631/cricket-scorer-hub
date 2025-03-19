@@ -16,7 +16,14 @@ import Notifications from "./pages/Notifications";
 import Login from "./pages/Login";
 import AdminPanel from "./pages/AdminPanel";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -31,6 +38,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Define the AppRoutes component to use the auth context
 const AppRoutes = () => {
+  const { currentUser } = useAuth();
+
   return (
     <Routes>
       <Route path="/" element={<Index />} />
@@ -40,7 +49,9 @@ const AppRoutes = () => {
       <Route path="/player/:id" element={<PlayerStats />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/notifications" element={<Notifications />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={
+        currentUser ? <Navigate to="/" /> : <Login />
+      } />
       <Route path="/admin" element={
         <ProtectedRoute>
           <AdminPanel />

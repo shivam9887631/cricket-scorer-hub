@@ -5,15 +5,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Lock, Mail, AlertCircle } from "lucide-react";
+import { ChevronRight, Lock, Mail, AlertCircle, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, resetPassword } = useAuth();
+  const { login, register, resetPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isResetPassword, setIsResetPassword] = useState(false);
@@ -23,7 +25,6 @@ const Login = () => {
     e.preventDefault();
     setError("");
     
-    // Basic validation
     if (!email || !password) {
       setError("Please enter both email and password");
       return;
@@ -34,6 +35,35 @@ const Login = () => {
       await login(email, password);
     } catch (err: any) {
       setError(err.message || "Failed to login");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    
+    if (!email || !password) {
+      setError("Please enter both email and password");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    
+    if (password.length < 6) {
+      setError("Password should be at least 6 characters");
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      await register(email, password);
+    } catch (err: any) {
+      setError(err.message || "Failed to register");
     } finally {
       setIsLoading(false);
     }
@@ -59,86 +89,28 @@ const Login = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-cricket-pitch">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-cricket-sky/10 flex items-center justify-center mx-auto mb-4">
-            <div className="w-10 h-10 rounded-full bg-cricket-sky text-white flex items-center justify-center">
-              <ChevronRight className="h-6 w-6" />
+  if (isResetPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-cricket-pitch">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 rounded-full bg-cricket-sky/10 flex items-center justify-center mx-auto mb-4">
+              <div className="w-10 h-10 rounded-full bg-cricket-sky text-white flex items-center justify-center">
+                <ChevronRight className="h-6 w-6" />
+              </div>
             </div>
+            <h1 className="text-2xl font-bold">Cricket Scores</h1>
+            <p className="text-muted-foreground">Reset your password</p>
           </div>
-          <h1 className="text-2xl font-bold">Cricket Scores</h1>
-          <p className="text-muted-foreground">Sign in to access your account</p>
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>{isResetPassword ? "Reset Password" : "Sign In"}</CardTitle>
-            <CardDescription>
-              {isResetPassword 
-                ? "Enter your email to receive a password reset link" 
-                : "Enter your credentials to continue"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!isResetPassword ? (
-              <form onSubmit={handleLogin}>
-                {error && (
-                  <Alert variant="destructive" className="mb-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input 
-                        id="email" 
-                        placeholder="Enter your email" 
-                        className="pl-10" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={isLoading}
-                        type="email"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="password">Password</Label>
-                      <button 
-                        type="button"
-                        className="text-xs text-cricket-sky hover:underline"
-                        onClick={() => setIsResetPassword(true)}
-                      >
-                        Forgot password?
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input 
-                        id="password" 
-                        type="password" 
-                        placeholder="Enter your password" 
-                        className="pl-10"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        disabled={isLoading}
-                      />
-                    </div>
-                  </div>
-                  
-                  <Button type="submit" className="w-full bg-cricket-sky hover:bg-cricket-sky/90" disabled={isLoading}>
-                    {isLoading ? "Signing in..." : "Sign In"}
-                  </Button>
-                </div>
-              </form>
-            ) : (
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Reset Password</CardTitle>
+              <CardDescription>
+                Enter your email to receive a password reset link
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <form onSubmit={handleResetPassword}>
                 {error && (
                   <Alert variant="destructive" className="mb-4">
@@ -187,8 +159,173 @@ const Login = () => {
                   </Button>
                 </div>
               </form>
-            )}
-          </CardContent>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-cricket-pitch">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 rounded-full bg-cricket-sky/10 flex items-center justify-center mx-auto mb-4">
+            <div className="w-10 h-10 rounded-full bg-cricket-sky text-white flex items-center justify-center">
+              <ChevronRight className="h-6 w-6" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold">Cricket Scores</h1>
+          <p className="text-muted-foreground">Sign in to access your account</p>
+        </div>
+        
+        <Card>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="login">
+              <CardHeader>
+                <CardTitle>Sign In</CardTitle>
+                <CardDescription>
+                  Enter your credentials to continue
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleLogin}>
+                  {error && (
+                    <Alert variant="destructive" className="mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input 
+                          id="email" 
+                          placeholder="Enter your email" 
+                          className="pl-10" 
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          disabled={isLoading}
+                          type="email"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="password">Password</Label>
+                        <button 
+                          type="button"
+                          className="text-xs text-cricket-sky hover:underline"
+                          onClick={() => setIsResetPassword(true)}
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input 
+                          id="password" 
+                          type="password" 
+                          placeholder="Enter your password" 
+                          className="pl-10"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button type="submit" className="w-full bg-cricket-sky hover:bg-cricket-sky/90" disabled={isLoading}>
+                      {isLoading ? "Signing in..." : "Sign In"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </TabsContent>
+            
+            <TabsContent value="signup">
+              <CardHeader>
+                <CardTitle>Create Account</CardTitle>
+                <CardDescription>
+                  Register a new account to get started
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleRegister}>
+                  {error && (
+                    <Alert variant="destructive" className="mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input 
+                          id="signup-email" 
+                          placeholder="Enter your email" 
+                          className="pl-10" 
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          disabled={isLoading}
+                          type="email"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input 
+                          id="signup-password" 
+                          type="password" 
+                          placeholder="Create a password" 
+                          className="pl-10"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirm Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input 
+                          id="confirm-password" 
+                          type="password" 
+                          placeholder="Confirm your password" 
+                          className="pl-10"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button type="submit" className="w-full bg-cricket-sky hover:bg-cricket-sky/90" disabled={isLoading}>
+                      {isLoading ? "Creating account..." : "Create Account"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </TabsContent>
+          </Tabs>
+
           <CardFooter className="flex flex-col space-y-4">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -206,15 +343,6 @@ const Login = () => {
             </div>
           </CardFooter>
         </Card>
-        
-        <div className="text-center mt-6 text-sm text-muted-foreground">
-          <p>
-            Don't have an account?{" "}
-            <a href="#" className="text-cricket-sky hover:underline">
-              Sign up
-            </a>
-          </p>
-        </div>
       </div>
     </div>
   );
