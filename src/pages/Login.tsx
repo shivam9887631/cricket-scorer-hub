@@ -5,16 +5,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Lock, Mail } from "lucide-react";
+import { ChevronRight, Lock, Mail, AlertCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login, resetPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isResetPassword, setIsResetPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     
@@ -24,17 +29,34 @@ const Login = () => {
       return;
     }
     
-    // Mock login
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      await login(email, password);
+    } catch (err: any) {
+      setError(err.message || "Failed to login");
+    } finally {
       setIsLoading(false);
-      // Mock credentials for easy testing
-      if (email === "admin@cricket.com" && password === "password") {
-        navigate("/");
-      } else {
-        setError("Invalid email or password");
-      }
-    }, 1500);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      await resetPassword(email);
+      setResetSent(true);
+    } catch (err: any) {
+      setError(err.message || "Failed to send reset email");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -52,59 +74,120 @@ const Login = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>Enter your credentials to continue</CardDescription>
+            <CardTitle>{isResetPassword ? "Reset Password" : "Sign In"}</CardTitle>
+            <CardDescription>
+              {isResetPassword 
+                ? "Enter your email to receive a password reset link" 
+                : "Enter your credentials to continue"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit}>
-              {error && (
-                <div className="bg-cricket-live/10 text-cricket-live p-3 rounded-md mb-4 text-sm">
-                  {error}
-                </div>
-              )}
-              
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input 
-                      id="email" 
-                      placeholder="Enter your email" 
-                      className="pl-10" 
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
+            {!isResetPassword ? (
+              <form onSubmit={handleLogin}>
+                {error && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
                 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <a href="#" className="text-xs text-cricket-sky hover:underline">
-                      Forgot password?
-                    </a>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input 
+                        id="email" 
+                        placeholder="Enter your email" 
+                        className="pl-10" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isLoading}
+                        type="email"
+                      />
+                    </div>
                   </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      placeholder="Enter your password" 
-                      className="pl-10"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={isLoading}
-                    />
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                      <button 
+                        type="button"
+                        className="text-xs text-cricket-sky hover:underline"
+                        onClick={() => setIsResetPassword(true)}
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input 
+                        id="password" 
+                        type="password" 
+                        placeholder="Enter your password" 
+                        className="pl-10"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={isLoading}
+                      />
+                    </div>
                   </div>
+                  
+                  <Button type="submit" className="w-full bg-cricket-sky hover:bg-cricket-sky/90" disabled={isLoading}>
+                    {isLoading ? "Signing in..." : "Sign In"}
+                  </Button>
                 </div>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPassword}>
+                {error && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
                 
-                <Button type="submit" className="w-full bg-cricket-sky hover:bg-cricket-sky/90" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign In"}
-                </Button>
-              </div>
-            </form>
+                {resetSent && (
+                  <Alert className="mb-4 bg-cricket-grass/10 text-cricket-grass border-cricket-grass/20">
+                    <AlertDescription>
+                      Reset link sent! Check your email for instructions.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input 
+                        id="reset-email" 
+                        placeholder="Enter your email" 
+                        className="pl-10" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isLoading}
+                        type="email"
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button type="submit" className="w-full bg-cricket-sky hover:bg-cricket-sky/90" disabled={isLoading}>
+                    {isLoading ? "Sending..." : "Send Reset Link"}
+                  </Button>
+                  
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={() => setIsResetPassword(false)}
+                    disabled={isLoading}
+                  >
+                    Back to Login
+                  </Button>
+                </div>
+              </form>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="relative">
