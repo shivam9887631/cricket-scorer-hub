@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Mail, Lock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { FirebaseError } from "firebase/app";
 
 interface RegisterFormProps {
   email: string;
@@ -50,8 +51,30 @@ const RegisterForm = ({
     setIsLoading(true);
     try {
       await register(email, password);
-    } catch (err: any) {
-      setError(err.message || "Failed to register");
+      console.log("Registration successful");
+    } catch (err: unknown) {
+      console.error("Registration error:", err);
+      if (err instanceof FirebaseError) {
+        // Handle specific Firebase auth errors
+        switch (err.code) {
+          case 'auth/email-already-in-use':
+            setError('This email is already in use');
+            break;
+          case 'auth/invalid-email':
+            setError('Invalid email format');
+            break;
+          case 'auth/weak-password':
+            setError('Password is too weak');
+            break;
+          case 'auth/configuration-not-found':
+            setError('Firebase Auth is not properly configured. Please check Firebase console settings.');
+            break;
+          default:
+            setError(`Registration failed: ${err.message}`);
+        }
+      } else {
+        setError("An unexpected error occurred during registration");
+      }
     } finally {
       setIsLoading(false);
     }
