@@ -2,106 +2,30 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Lock, Mail, AlertCircle, User } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Import refactored components
+import LoginHeader from "@/components/login/LoginHeader";
+import LoginForm from "@/components/login/LoginForm";
+import RegisterForm from "@/components/login/RegisterForm";
+import ResetPasswordForm from "@/components/login/ResetPasswordForm";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, register, resetPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [isResetPassword, setIsResetPassword] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    
-    if (!email || !password) {
-      setError("Please enter both email and password");
-      return;
-    }
-    
-    setIsLoading(true);
-    try {
-      await login(email, password);
-    } catch (err: any) {
-      setError(err.message || "Failed to login");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    
-    if (!email || !password) {
-      setError("Please enter both email and password");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    
-    if (password.length < 6) {
-      setError("Password should be at least 6 characters");
-      return;
-    }
-    
-    setIsLoading(true);
-    try {
-      await register(email, password);
-    } catch (err: any) {
-      setError(err.message || "Failed to register");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    
-    if (!email) {
-      setError("Please enter your email address");
-      return;
-    }
-    
-    setIsLoading(true);
-    try {
-      await resetPassword(email);
-      setResetSent(true);
-    } catch (err: any) {
-      setError(err.message || "Failed to send reset email");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   if (isResetPassword) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-cricket-pitch">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-full bg-cricket-sky/10 flex items-center justify-center mx-auto mb-4">
-              <div className="w-10 h-10 rounded-full bg-cricket-sky text-white flex items-center justify-center">
-                <ChevronRight className="h-6 w-6" />
-              </div>
-            </div>
-            <h1 className="text-2xl font-bold">Cricket Scores</h1>
-            <p className="text-muted-foreground">Reset your password</p>
-          </div>
+          <LoginHeader 
+            title="Crickify" 
+            subtitle="Reset your password" 
+          />
           
           <Card>
             <CardHeader>
@@ -111,54 +35,11 @@ const Login = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleResetPassword}>
-                {error && (
-                  <Alert variant="destructive" className="mb-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                
-                {resetSent && (
-                  <Alert className="mb-4 bg-cricket-grass/10 text-cricket-grass border-cricket-grass/20">
-                    <AlertDescription>
-                      Reset link sent! Check your email for instructions.
-                    </AlertDescription>
-                  </Alert>
-                )}
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="reset-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input 
-                        id="reset-email" 
-                        placeholder="Enter your email" 
-                        className="pl-10" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={isLoading}
-                        type="email"
-                      />
-                    </div>
-                  </div>
-                  
-                  <Button type="submit" className="w-full bg-cricket-sky hover:bg-cricket-sky/90" disabled={isLoading}>
-                    {isLoading ? "Sending..." : "Send Reset Link"}
-                  </Button>
-                  
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full" 
-                    onClick={() => setIsResetPassword(false)}
-                    disabled={isLoading}
-                  >
-                    Back to Login
-                  </Button>
-                </div>
-              </form>
+              <ResetPasswordForm 
+                email={email} 
+                setEmail={setEmail} 
+                setIsResetPassword={setIsResetPassword} 
+              />
             </CardContent>
           </Card>
         </div>
@@ -169,15 +50,10 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-cricket-pitch">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-cricket-sky/10 flex items-center justify-center mx-auto mb-4">
-            <div className="w-10 h-10 rounded-full bg-cricket-sky text-white flex items-center justify-center">
-              <ChevronRight className="h-6 w-6" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold">Cricket Scores</h1>
-          <p className="text-muted-foreground">Sign in to access your account</p>
-        </div>
+        <LoginHeader 
+          title="Crickify" 
+          subtitle="Sign in to access your account" 
+        />
         
         <Card>
           <Tabs defaultValue="login" className="w-full">
@@ -194,61 +70,13 @@ const Login = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleLogin}>
-                  {error && (
-                    <Alert variant="destructive" className="mb-4">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input 
-                          id="email" 
-                          placeholder="Enter your email" 
-                          className="pl-10" 
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          disabled={isLoading}
-                          type="email"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="password">Password</Label>
-                        <button 
-                          type="button"
-                          className="text-xs text-cricket-sky hover:underline"
-                          onClick={() => setIsResetPassword(true)}
-                        >
-                          Forgot password?
-                        </button>
-                      </div>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input 
-                          id="password" 
-                          type="password" 
-                          placeholder="Enter your password" 
-                          className="pl-10"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </div>
-                    
-                    <Button type="submit" className="w-full bg-cricket-sky hover:bg-cricket-sky/90" disabled={isLoading}>
-                      {isLoading ? "Signing in..." : "Sign In"}
-                    </Button>
-                  </div>
-                </form>
+                <LoginForm 
+                  email={email} 
+                  setEmail={setEmail} 
+                  password={password} 
+                  setPassword={setPassword} 
+                  setIsResetPassword={setIsResetPassword} 
+                />
               </CardContent>
             </TabsContent>
             
@@ -260,68 +88,14 @@ const Login = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleRegister}>
-                  {error && (
-                    <Alert variant="destructive" className="mb-4">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input 
-                          id="signup-email" 
-                          placeholder="Enter your email" 
-                          className="pl-10" 
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          disabled={isLoading}
-                          type="email"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input 
-                          id="signup-password" 
-                          type="password" 
-                          placeholder="Create a password" 
-                          className="pl-10"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="confirm-password">Confirm Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input 
-                          id="confirm-password" 
-                          type="password" 
-                          placeholder="Confirm your password" 
-                          className="pl-10"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          disabled={isLoading}
-                        />
-                      </div>
-                    </div>
-                    
-                    <Button type="submit" className="w-full bg-cricket-sky hover:bg-cricket-sky/90" disabled={isLoading}>
-                      {isLoading ? "Creating account..." : "Create Account"}
-                    </Button>
-                  </div>
-                </form>
+                <RegisterForm 
+                  email={email} 
+                  setEmail={setEmail} 
+                  password={password} 
+                  setPassword={setPassword}
+                  confirmPassword={confirmPassword}
+                  setConfirmPassword={setConfirmPassword}
+                />
               </CardContent>
             </TabsContent>
           </Tabs>
